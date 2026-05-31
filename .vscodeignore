@@ -1,0 +1,10 @@
+﻿.vscode/**
+!dist/**
+src/**
+tsconfig.json
+esbuild.config.mjs
+.eslintrc.json
+.prettierrc
+.gitignore
+DEVELOPMENT.md
+node_modules
