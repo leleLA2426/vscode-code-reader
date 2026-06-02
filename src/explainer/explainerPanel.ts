@@ -5,6 +5,7 @@ import { CodeExplainer } from '../ai/codeExplainer';
 export class ExplainerPanel {
   private panel: vscode.WebviewPanel | undefined;
   private disposables: vscode.Disposable[] = [];
+  private initialized = false;
 
   constructor(
     private context: vscode.ExtensionContext,
@@ -29,6 +30,7 @@ export class ExplainerPanel {
 
       this.panel.onDidDispose(() => {
         this.panel = undefined;
+        this.initialized = false;
       }, null, this.disposables);
 
       this.panel.webview.onDidReceiveMessage((msg) => {
@@ -36,28 +38,23 @@ export class ExplainerPanel {
           case 'cancelExplain':
             this.explainer.cancel();
             break;
-          case 'askQuestion':
-            // TODO: follow-up chat
-            break;
-          case 'switchMode':
-            // Mode is tracked in the webview; the extension reads it on the next explain call
-            break;
         }
       }, null, this.disposables);
     }
 
-    // Set title with model name
     this.panel.title = model ? `AI: ${model}` : 'AI Explainer';
 
-    // Build fresh HTML each time (resets messages)
-    const explainerJsUri = this.panel.webview.asWebviewUri(
-      vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'webview', 'explainer.js'),
-    );
-    const explainerCssUri = this.panel.webview.asWebviewUri(
-      vscode.Uri.joinPath(this.context.extensionUri, 'media', 'styles', 'explainer.css'),
-    );
+    // Only set HTML on first creation; subsequent calls use postMessage
+    if (!this.initialized) {
+      this.initialized = true;
+      const explainerJsUri = this.panel.webview.asWebviewUri(
+        vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'webview', 'explainer.js'),
+      );
+      const explainerCssUri = this.panel.webview.asWebviewUri(
+        vscode.Uri.joinPath(this.context.extensionUri, 'media', 'styles', 'explainer.css'),
+      );
 
-    this.panel.webview.html = `<!DOCTYPE html>
+      this.panel.webview.html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -82,6 +79,10 @@ export class ExplainerPanel {
   <script src="${explainerJsUri}"></script>
 </body>
 </html>`;
+    } else {
+      // Clear previous messages for new explanation
+      this.panel.webview.postMessage({ type: 'clearMessages' });
+    }
 
     this.panel.reveal(vscode.ViewColumn.Beside);
   }

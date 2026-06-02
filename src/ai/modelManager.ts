@@ -92,4 +92,16 @@ export class ModelManager {
       },
     );
   }
+
+
+  async checkHealthWithRetry(maxRetries = 3): Promise<boolean> {
+    for (let i = 0; i < maxRetries; i++) {
+      const healthy = await this.checkHealth();
+      if (healthy) return true;
+      if (i < maxRetries - 1) {
+        await new Promise((r) => setTimeout(r, 3000 * (i + 1)));
+      }
+    }
+    return false;
+  }
 }

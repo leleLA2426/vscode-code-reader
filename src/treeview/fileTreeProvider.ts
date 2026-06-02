@@ -1,4 +1,4 @@
-﻿import * as vscode from 'vscode';
+import * as vscode from 'vscode';
 import * as path from 'path';
 import { EXCLUDED_DIRS } from '../constants';
 import { getConfig } from '../utils/config';
@@ -102,12 +102,6 @@ export class FileTreeItem extends vscode.TreeItem {
       } else {
         this.iconPath = this.getFileIcon(ext);
       }
-
-      this.command = {
-        command: 'vscode.open',
-        title: 'Open File',
-        arguments: [resourceUri],
-      };
     }
   }
 

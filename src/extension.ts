@@ -4,7 +4,6 @@ import { FileTreeProvider } from './treeview/fileTreeProvider';
 import { ReadingListProvider } from './treeview/readingListProvider';
 import { ReaderPanel } from './reader/readerPanel';
 import { SymbolProvider } from './symbols/symbolProvider';
-import { DependencyGraph } from './symbols/dependencyGraph';
 import { OllamaClient } from './ai/ollamaClient';
 import { ModelManager } from './ai/modelManager';
 import { CodeExplainer } from './ai/codeExplainer';
@@ -67,9 +66,7 @@ export function activate(context: vscode.ExtensionContext) {
   readerPanel = new ReaderPanel(context, bookmarkService, readingHistory);
   explainerPanel = new ExplainerPanel(context, codeExplainer);
 
-  // ---- Symbol & dep ----
   const symbolProvider = new SymbolProvider();
-  const depGraph = new DependencyGraph();
 
   // ========================================================
   // Commands
@@ -180,7 +177,7 @@ export function activate(context: vscode.ExtensionContext) {
           note: '',
           createdAt: Date.now(),
         });
-        bookmarkTreeProvider.refresh();
+        bookmarkTreeProvider.refresh();        readerPanel.refreshBookmarks();
         vscode.window.showInformationMessage('Bookmark added');
       }
     }),
@@ -239,7 +236,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Startup: check Ollama health
   // ========================================================
 
-  modelManager.checkHealth().then(async (healthy) => {
+  modelManager.checkHealthWithRetry().then(async (healthy) => {
     if (healthy) {
       await modelManager.ensureModel();
       updateStatusBar();
@@ -267,6 +264,6 @@ function updateStatusBar(text?: string): void {
   const model = modelManager?.getCurrentModel() || 'codellama:7b';
   const busy = codeExplainer?.isBusy;
   statusBarItem.text = busy ? `$(loading~spin) ${model}` : `$(hubot) ${model}`;
-  statusBarItem.tooltip = busy ? 'AI is working... Click to cancel' : `Model: ${model} 閳?Click to switch`;
+  statusBarItem.tooltip = busy ? 'AI is working... Click to cancel' : `Model: ${model} 闂?Click to switch`;
   statusBarItem.show();
 }

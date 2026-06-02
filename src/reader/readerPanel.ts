@@ -5,7 +5,7 @@ import { BookmarkService } from '../features/bookmarks';
 import { ReadingHistory } from '../features/readingHistory';
 import { SymbolProvider } from '../symbols/symbolProvider';
 import { DependencyGraph } from '../symbols/dependencyGraph';
-import type { Bookmark, ReaderTheme, SymbolNode, DependencyEdge } from '../types';
+import type { Bookmark, ReaderTheme, SymbolNode } from '../types';
 
 export class ReaderPanel {
   private panel: vscode.WebviewPanel | undefined;
@@ -92,6 +92,12 @@ export class ReaderPanel {
 
   updateSelection(_selection: vscode.Selection): void {}
 
+  refreshBookmarks(): void {
+    if (!this.panel || !this.currentDoc) return;
+    const bookmarks = this.bookmarkService.getByFile(this.currentDoc.uri.fsPath);
+    this.send({ type: 'updateBookmarks', bookmarks });
+  }
+
   dispose(): void {
     this.panel?.dispose();
     this.disposables.forEach((d) => d.dispose());
@@ -100,8 +106,6 @@ export class ReaderPanel {
   private send(msg: Record<string, unknown>): void {
     this.panel?.webview.postMessage(msg);
   }
-
-  // ---- Load file ----
 
   private async loadCurrentFile(): Promise<void> {
     if (!this.panel || !this.currentDoc) return;
@@ -125,8 +129,6 @@ export class ReaderPanel {
   private async loadReferences(line: number): Promise<void> {
     if (!this.currentDoc) return;
     const position = new vscode.Position(line, 0);
-
-    // Get the word at position
     const wordRange = this.currentDoc.getWordRangeAtPosition(position);
     if (!wordRange) {
       this.send({ type: 'updateReferences', symbolName: '', edges: [] });
@@ -135,8 +137,6 @@ export class ReaderPanel {
 
     const symbolName = this.currentDoc.getText(wordRange);
     const edges = await this.depGraph.findReferences(this.currentDoc, position);
-
-    // Get symbol info (reference count, definition)
     const info = await this.depGraph.getSymbolInfo(this.currentDoc, position);
 
     this.send({
@@ -147,8 +147,6 @@ export class ReaderPanel {
       definition: info?.definition || '',
     });
   }
-
-  // ---- HTML generation ----
 
   private buildHtml(
     doc: vscode.TextDocument,
@@ -211,7 +209,7 @@ export class ReaderPanel {
         <option value="sepia" ${theme === 'sepia' ? 'selected' : ''}>Sepia</option>
         <option value="dark" ${theme === 'dark' ? 'selected' : ''}>Dark</option>
       </select>
-      <button class="toolbar-btn" data-action="toggle-outline" title="Toggle outline &amp; refs">☰</button>
+      <button class="toolbar-btn" data-action="toggle-outline" title="Toggle outline">Menu</button>
     </div>
   </div>
   <div class="reader-body">
@@ -232,8 +230,6 @@ export class ReaderPanel {
 </body>
 </html>`;
   }
-
-  // ---- Helpers ----
 
   private detectFoldRegions(lines: string[]): Set<number> {
     const folds = new Set<number>();
@@ -281,11 +277,11 @@ export class ReaderPanel {
 
   private symbolIcon(kind: string): string {
     switch (kind) {
-      case 'function': case 'method': return 'ƒ';
+      case 'function': case 'method': return 'f';
       case 'class': return 'C';
       case 'interface': return 'I';
       case 'variable': return 'v';
-      default: return '•';
+      default: return '-';
     }
   }
 

@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   const vscode = acquireVsCodeApi();
 
   const messages = document.getElementById('messages');
@@ -10,7 +10,8 @@
 
   let currentMode = 'line-by-line';
   let isStreaming = false;
-  let explanationText = '';
+  let streamingBuffer = '';    // Accumulate raw chunks for clean Markdown rendering
+  let currentAiMessage: HTMLDivElement | null = null;
 
   // ---- Mode switching ----
   modeButtons.forEach((btn) => {
@@ -19,7 +20,6 @@
       btn.classList.add('active');
       currentMode = btn.dataset.mode || 'line-by-line';
 
-      // Show/hide chat input
       if (currentMode === 'chat') {
         chatInput?.classList.remove('hidden');
       } else {
@@ -33,6 +33,8 @@
     vscode.postMessage({ type: 'cancelExplain' });
     cancelBtn.classList.add('hidden');
     isStreaming = false;
+    streamingBuffer = '';
+    currentAiMessage = null;
   });
 
   // ---- Send question ----
@@ -57,29 +59,42 @@
       case 'explanationChunk':
         if (!isStreaming) {
           isStreaming = true;
+          streamingBuffer = '';
           cancelBtn?.classList.remove('hidden');
-          addMessage('ai', '');
+          currentAiMessage = addMessage('ai', '');
         }
-        appendToLastMessage(msg.chunk);
+        streamingBuffer += msg.chunk;
+        // Re-render entire accumulated text for clean Markdown across chunks
+        if (currentAiMessage) {
+          currentAiMessage.innerHTML = renderMarkdown(streamingBuffer);
+        }
+        messages!.scrollTop = messages!.scrollHeight;
         break;
 
       case 'explanationDone':
         isStreaming = false;
         cancelBtn?.classList.add('hidden');
-        explanationText = msg.fullText;
+        streamingBuffer = '';
+        currentAiMessage = null;
+        break;
+
+      case 'clearMessages':
+        if (messages) messages.innerHTML = '';
         break;
 
       case 'explanationError':
         isStreaming = false;
         cancelBtn?.classList.add('hidden');
+        streamingBuffer = '';
+        currentAiMessage = null;
         addMessage('error', msg.error);
         break;
     }
   });
 
   // ---- UI helpers ----
-  function addMessage(role: 'user' | 'ai' | 'error', text: string): void {
-    if (!messages) return;
+  function addMessage(role: 'user' | 'ai' | 'error', text: string): HTMLDivElement | null {
+    if (!messages) return null;
 
     const div = document.createElement('div');
     div.className = `message ${role}`;
@@ -92,27 +107,28 @@
 
     messages.appendChild(div);
     messages.scrollTop = messages.scrollHeight;
-  }
-
-  function appendToLastMessage(chunk: string): void {
-    if (!messages) return;
-
-    const last = messages.lastElementChild;
-    if (last && last.classList.contains('ai')) {
-      last.innerHTML = renderMarkdown(last.textContent + chunk);
-      messages.scrollTop = messages.scrollHeight;
-    }
+    return div;
   }
 
   function renderMarkdown(text: string): string {
-    // Simple Markdown-like rendering
-    return text
+    // Escape HTML first, then apply Markdown replacements
+    let out = text
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
-      .replace(/`([^`]+)`/g, '<code>$1</code>')
-      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n/g, '<br>');
+      .replace(/>/g, '&gt;');
+
+    // Code blocks (multi-line)
+    out = out.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+
+    // Inline code
+    out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    // Bold
+    out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+    // Line breaks
+    out = out.replace(/\n/g, '<br>');
+
+    return out;
   }
 })();

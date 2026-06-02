@@ -280,6 +280,13 @@
     return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
+  // Update file info for large files
+  const totalLines = codeTable?.querySelectorAll('tr').length || 0;
+  if (totalLines > 3000) {
+    const info = document.querySelector('.file-lines');
+    if (info) info.textContent = totalLines + ' lines (large file)';
+  }
+
   // ---- Signal ready ----
   vscode.postMessage({ type: 'ready' });
 })();

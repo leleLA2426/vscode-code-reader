@@ -16,6 +16,12 @@
   "categories": ["Other", "Visualization"],
   "keywords": ["code reader", "ai explain", "ollama", "code reading"],
   "activationEvents": [
+    "onCommand:codeReader.openReader",
+    "onCommand:codeReader.explainSelection",
+    "onCommand:codeReader.explainFile",
+    "onCommand:codeReader.toggleFocusMode",
+    "onCommand:codeReader.addBookmark",
+    "onCommand:codeReader.switchModel",
     "onView:codeReader.fileTree",
     "onView:codeReader.readingList"
   ],
