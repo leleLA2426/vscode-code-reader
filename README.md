@@ -1,67 +1,55 @@
-# 📖 Code Reader
+# Code Reader
 
-> Immersive code reading experience for VS Code, powered by local AI (Ollama)
+> VS Code 沉浸式代码阅读扩展，集成本地 AI（Ollama）逐行讲解
 
-![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.85-blue)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
+## 功能
 
-## Features
+- 🗂️ 项目文件浏览器 — 自动折叠无关目录
+- 📖 沉浸式阅读面板 — 三种主题，独立排版
+- 🧭 符号大纲 — 一键跳转函数/类/接口
+- 🔗 引用追踪 — TSServer 查找所有引用
+- 📁 代码折叠 — 缩进块折叠
+- 🤖 AI 讲解 — Ollama 本地模型逐行解释
+- 💬 AI 对话 — 追问模式
+- 📝 书签 + 阅读列表
+- 🎯 专注模式
 
-- **📂 Project File Browser** — Browse files in a dedicated sidebar, auto-collapse noise (node_modules, dist, etc.)
-- **📖 Immersive Reader Panel** — Read code in a beautifully formatted view with 3 themes (Light / Sepia / Dark)
-- **🧭 Symbol Outline** — Jump between functions, classes, and interfaces with one click
-- **🔗 Reference Tracking** — Click any symbol to see where it''s used across the project (powered by TSServer)
-- **📁 Code Folding** — Collapse indented blocks by clicking line numbers
-- **🤖 AI Explanations** — Select code and get line-by-line explanations from a local Ollama model
-- **💬 AI Chat** — Ask follow-up questions about the code
-- **📝 Bookmarks** — Mark lines with bookmarks, view them in the sidebar
-- **📚 Reading List** — Queue files for focused reading sessions
-- **🎯 Focus Mode** — Dim everything except the current selection
+## 环境要求
 
-## Requirements
+- VS Code >= 1.85
+- [Ollama](https://ollama.com) + 推荐 `ollama pull codellama:7b`
 
-- **VS Code** >= 1.85
-- **Ollama** — [Download](https://ollama.com) and run `ollama serve`
-- A model (recommended: `ollama pull codellama:7b`)
+## 快速开始
 
-## Quick Start
+1. 安装扩展
+2. 打开项目 → 点击左侧 Code Reader 图标
+3. 点击文件打开阅读面板
+4. 选中代码 → `Ctrl+Shift+E` AI 解释
 
-1. Install the extension
-2. Open a project folder
-3. Click the 📖 Code Reader icon in the activity bar
-4. Click any file to open the reader panel
-5. Select code → press `Ctrl+Shift+E` for AI explanation
+## 快捷键
 
-## Keyboard Shortcuts
+| 快捷键 | 功能 |
+|--------|------|
+| `Ctrl+Shift+R` | 打开阅读器 |
+| `Ctrl+Shift+E` | AI 解释 |
+| `Ctrl+Shift+F` | 专注模式 |
 
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+Shift+R` | Open current file in Code Reader |
-| `Ctrl+Shift+E` | Explain selected code with AI |
-| `Ctrl+Shift+F` | Toggle Focus Mode |
+## 配置项
 
-## Configuration
+| 设置 | 默认值 | 说明 |
+|------|--------|------|
+| `codeReader.ollamaBaseUrl` | `http://localhost:11434` | Ollama 地址 |
+| `codeReader.defaultModel` | `codellama:7b` | 默认模型 |
+| `codeReader.readerFontSize` | `16` | 字号 |
+| `codeReader.readerTheme` | `sepia` | 主题 |
+| `codeReader.maxFileSize` | `5000` | 大文件阈值 |
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `codeReader.ollamaBaseUrl` | `http://localhost:11434` | Ollama server URL |
-| `codeReader.defaultModel` | `codellama:7b` | Default AI model |
-| `codeReader.readerFontSize` | `16` | Reader panel font size |
-| `codeReader.readerTheme` | `sepia` | Reader theme (`light`, `sepia`, `dark`) |
-| `codeReader.autoCollapseNodeModules` | `true` | Hide noisy directories in file tree |
-| `codeReader.maxFileSize` | `5000` | Lines before pagination kicks in |
+## 文档
 
-## Development
+- [开发文档](./docs/DEVELOPMENT.md)
+- [测试报告](./docs/TEST_REPORT.md)
+- [更新日志](./docs/CHANGELOG.md)
 
-```bash
-npm install --registry=https://registry.npmmirror.com --cache .npm-cache
-npm run watch    # Auto-rebuild on changes
-# Press F5 to launch Extension Development Host
-```
-
-See [DEVELOPMENT.md](./DEVELOPMENT.md) for full architecture and roadmap.
-
-## License
+## 许可证
 
 MIT
