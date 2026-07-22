@@ -1,0 +1,116 @@
+{
+  "name": "code-reader",
+  "displayName": "Code Reader",
+  "version": "0.2.0",
+  "description": "Immersive code reader for VS Code with local AI (Ollama) - TS + C++ native addon",
+  "publisher": "code-reader",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "activationEvents": [
+    "onCommand:codeReader.openReader",
+    "onView:codeReader.fileTree"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "codeReader",
+          "title": "Code Reader",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "codeReader": [
+        {
+          "id": "codeReader.fileTree",
+          "name": "Project Files"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "codeReader.openReader",
+        "title": "Open Code Reader"
+      },
+      {
+        "command": "codeReader.refreshFileTree",
+        "title": "Refresh File Tree",
+        "icon": "$(refresh)"
+      }
+    ],
+   "keybindings": [
+     {
+       "command": "codeReader.openReader",
+        "key": "ctrl+alt+r"
+     }
+   ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "codeReader.refreshFileTree",
+          "when": "view == codeReader.fileTree",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Code Reader",
+      "properties": {
+        "codeReader.readerFontSize": {
+          "type": "number",
+          "default": 16,
+          "description": "Reader panel font size"
+        },
+        "codeReader.readerTheme": {
+          "type": "string",
+          "default": "sepia",
+          "enum": [
+            "light",
+            "sepia",
+            "dark"
+          ],
+          "description": "Reader panel theme"
+        },
+        "codeReader.autoCollapseNodeModules": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-collapse node_modules"
+        },
+        "codeReader.maxFileSize": {
+          "type": "number",
+          "default": 5000,
+          "description": "Large file pagination threshold (lines)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "node esbuild.config.cjs --production",
+    "build:ts": "node esbuild.config.cjs",
+    "build:native": "node-gyp rebuild --debug",
+    "build:native:release": "node-gyp rebuild",
+    "watch": "node esbuild.config.cjs --watch",
+    "lint": "eslint src --ext ts",
+    "test:ts": "echo TS tests not yet configured",
+    "test:native": "echo C++ tests not yet configured"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "iconv-lite": "^0.7.3",
+    "node-addon-api": "^7.0.0",
+    "node-gyp": "^13.0.1"
+  }
+}

@@ -1,0 +1,65 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: var(--reader-font-size, 16px);
+  line-height: 1.6;
+  padding: 16px 0;
+  overflow-x: auto;
+}
+
+/* ---- Themes ---- */
+body.theme-light  { background: #ffffff; color: #1e1e1e; }
+body.theme-sepia  { background: #f5e6d3; color: #3e2a1e; }
+body.theme-dark   { background: #1e1e1e; color: #d4d4d4; }
+
+/* ---- Code Line ---- */
+.code-line {
+  display: flex;
+  min-height: 1.6em;
+  padding: 0 16px;
+}
+
+.code-line:hover { background: rgba(128, 128, 128, 0.1); }
+
+.line-number {
+  width: 48px;
+  text-align: right;
+  padding-right: 16px;
+  color: #858585;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.line-content {
+  flex: 1;
+  white-space: pre;
+  tab-size: 4;
+}
+
+/* ---- Syntax Highlighting (Dark) ---- */
+.token-keyword  { color: #569cd6; }
+.token-string   { color: #ce9178; }
+.token-comment  { color: #6a9955; font-style: italic; }
+.token-number   { color: #b5cea8; }
+.token-function { color: #dcdcaa; }
+.token-class    { color: #4ec9b0; }
+
+/* ---- Sepia ---- */
+.theme-sepia .token-keyword  { color: #8b4513; }
+.theme-sepia .token-string   { color: #556b2f; }
+.theme-sepia .token-comment  { color: #808000; }
+.theme-sepia .token-number   { color: #483d8b; }
+.theme-sepia .token-function { color: #0000cd; }
+.theme-sepia .token-class    { color: #2e8b57; }
+
+/* ---- Light ---- */
+.theme-light .token-keyword  { color: #0000ff; }
+.theme-light .token-string   { color: #a31515; }
+.theme-light .token-comment  { color: #008000; }
+.theme-light .token-number   { color: #098658; }
+.theme-light .token-function { color: #795e26; }
+.theme-light .token-class    { color: #267f99; }
+
+/* ---- Fold ---- */
+.fold-hidden { display: none; }

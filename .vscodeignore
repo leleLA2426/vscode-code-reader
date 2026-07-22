@@ -1,0 +1,10 @@
+.vscode/**
+node_modules/
+native/src/
+native/deps/
+src/**
+tsconfig.json
+esbuild.config.cjs
+.gitignore
+docs/
+test/

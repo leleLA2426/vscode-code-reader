@@ -1,0 +1,8 @@
+﻿node_modules/
+dist/
+out/
+*.vsix
+build/
+native/build/
+native/deps/
+.vscode-test/
