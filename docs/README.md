@@ -32,12 +32,12 @@ npm run build:ts       # TypeScript
 
 ### 文档
 
-- [产品需求文档](docs/PRD.md)
-- [架构设计文档](docs/ARCHITECTURE.md)
-- [开发指南](docs/DEVELOPMENT.md)
-- [变更日志](docs/CHANGELOG.md)
-- [测试报告](docs/test-report.md)
-- [AGENTS.md](docs/AGENTS.md)
+- [产品需求文档](PRD.md)
+- [架构设计文档](ARCHITECTURE.md)
+- [开发指南](DEVELOPMENT.md)
+- [变更日志](CHANGELOG.md)
+- [测试报告](test-report.md)
+- [AGENTS.md](AGENTS.md)
 
 ## 许可
 
