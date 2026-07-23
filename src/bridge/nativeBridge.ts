@@ -5,7 +5,6 @@ import { ParseResult } from "../types";
 let nativeModule: any = null;
 
 function resolveNativePath(): string {
-  // VSCode bundles extensions under a known structure; try common build output locations
   const extPath = vscode.extensions.getExtension("code-reader")?.extensionPath || process.cwd();
   const debugPath = path.join(extPath, "build", "Debug", "code-reader-native.node");
   const releasePath = path.join(extPath, "build", "Release", "code-reader-native.node");
@@ -24,11 +23,12 @@ function getNative(): any {
   return nativeModule;
 }
 
-export function parseFile(content: string, language: string): ParseResult {
+/** Call C++ layer to parse a code file (async via Napi::AsyncWorker) */
+export async function parseFileAsync(content: string, language: string): Promise<ParseResult> {
   const native = getNative();
-  const raw = native.parseFile(content, language);
+  const raw = await native.parseFile(content, language);
   return {
-    content: raw.content,
+    content: raw.content || content,
     tokens: raw.tokens || [],
     symbols: raw.symbols || [],
     folds: raw.folds || [],

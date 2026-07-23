@@ -63,3 +63,15 @@ body.theme-dark   { background: #1e1e1e; color: #d4d4d4; }
 
 /* ---- Fold ---- */
 .fold-hidden { display: none; }
+
+.fold-toggle {
+  display: inline-block;
+  width: 14px;
+  cursor: pointer;
+  user-select: none;
+  color: #888;
+  font-size: 10px;
+  vertical-align: middle;
+}
+
+.fold-toggle:hover { color: #aaa; }

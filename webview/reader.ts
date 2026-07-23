@@ -8,6 +8,9 @@ let currentContent = "";
 let currentTokens: Token[] = [];
 let currentFolds: FoldRange[] = [];
 
+// Track fold state: fold start line → collapsed?
+const foldState = new Map<number, boolean>();
+
 window.addEventListener("message", (event) => {
   const msg = event.data;
   switch (msg.type) {
@@ -15,6 +18,11 @@ window.addEventListener("message", (event) => {
       currentContent = msg.result.content;
       currentTokens = msg.result.tokens;
       currentFolds = msg.result.folds;
+      // Reset fold state for new file
+      foldState.clear();
+      for (const f of currentFolds) {
+        foldState.set(f.startLine, true); // all folds start collapsed
+      }
       renderContent();
       break;
     case "updateTheme":
@@ -27,13 +35,19 @@ window.addEventListener("message", (event) => {
   }
 });
 
+function toggleFold(startLine: number): void {
+  const current = foldState.get(startLine);
+  foldState.set(startLine, !current);
+  renderContent();
+}
+
 function renderContent(): void {
   const container = document.getElementById("reader-content");
   if (!container) return;
 
   const lines = currentContent.split("\n");
 
-  // 构建每行 token 索引
+  // Build per-line token index
   const lineTokens: Map<number, Token[]> = new Map();
   for (const t of currentTokens) {
     const list = lineTokens.get(t.line) || [];
@@ -41,29 +55,49 @@ function renderContent(): void {
     lineTokens.set(t.line, list);
   }
 
-  // 构建折叠行集合
+  // Build collapsed line set from current fold state
   const collapsedLines: Set<number> = new Set();
   for (const f of currentFolds) {
-    for (let i = f.startLine + 1; i <= f.endLine; i++) {
-      collapsedLines.add(i);
+    if (foldState.get(f.startLine) !== false) {
+      // Fold is collapsed (default) or explicitly collapsed
+      for (let i = f.startLine + 1; i <= f.endLine; i++) {
+        collapsedLines.add(i);
+      }
     }
+  }
+
+  // Build set of fold-start lines for quick lookup
+  const foldStartLines = new Set<number>();
+  for (const f of currentFolds) {
+    foldStartLines.add(f.startLine);
   }
 
   container.innerHTML = "";
 
   for (let i = 0; i < lines.length; i++) {
+    const isFoldStart = foldStartLines.has(i);
+    const isCollapsed = foldState.get(i) !== false; // default true = collapsed
     const isFolded = collapsedLines.has(i);
+
     const lineDiv = document.createElement("div");
     lineDiv.className = `code-line${isFolded ? " fold-hidden" : ""}`;
     lineDiv.setAttribute("data-line", String(i));
 
-    // 行号
+    // Line number
     const lineNum = document.createElement("span");
     lineNum.className = "line-number";
-    lineNum.textContent = String(i + 1);
+    if (isFoldStart) {
+      // Fold toggle button before line number
+      const foldBtn = document.createElement("span");
+      foldBtn.className = "fold-toggle";
+      foldBtn.textContent = isCollapsed ? "\u25B6" : "\u25BC";
+      foldBtn.addEventListener("click", () => toggleFold(i));
+      lineNum.appendChild(foldBtn);
+    }
+    lineNum.appendChild(document.createTextNode(String(i + 1)));
     lineDiv.appendChild(lineNum);
 
-    // 代码内容（带高亮）
+    // Code content (with syntax highlighting when tokens exist)
     const contentSpan = document.createElement("span");
     contentSpan.className = "line-content";
 
@@ -81,6 +115,12 @@ function renderContent(): void {
         tokenSpan.textContent = currentContent.slice(tok.startByte, tok.endByte);
         contentSpan.appendChild(tokenSpan);
         lastEnd = tok.endByte;
+      }
+      // Remaining text after last token
+      if (lastEnd < lines[i].length) {
+        contentSpan.appendChild(
+          document.createTextNode(lines[i].slice(lastEnd))
+        );
       }
     } else {
       contentSpan.textContent = lines[i];

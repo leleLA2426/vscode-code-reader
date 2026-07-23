@@ -1,12 +1,19 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { parseFile } from "../bridge/nativeBridge";
+import { parseFileAsync } from "../bridge/nativeBridge";
 import { readFileContent, getLanguageForFile } from "../utils/fileUtils";
 import { getConfig } from "../utils/config";
-import { ParseResult } from "../types";
+import { ParseResult, SymbolNode } from "../types";
 import { extContext } from "../extension";
 
 let currentPanel: vscode.WebviewPanel | undefined;
+
+/** Callback: called when a file is parsed with symbol data */
+let onSymbolsReady: ((filePath: string, symbols: SymbolNode[]) => void) | null = null;
+
+export function setOnSymbolsReady(cb: (filePath: string, symbols: SymbolNode[]) => void) {
+  onSymbolsReady = cb;
+}
 
 export async function openReader(filePath: string): Promise<void> {
   const config = getConfig();
@@ -15,7 +22,7 @@ export async function openReader(filePath: string): Promise<void> {
   let parseResult: ParseResult;
 
   try {
-    parseResult = parseFile(content, language);
+    parseResult = await parseFileAsync(content, language);
   } catch (e) {
     console.warn("[Code Reader] Native parse failed, falling back to plain text.", e);
     parseResult = { content, tokens: [], symbols: [], folds: [] };
@@ -26,6 +33,11 @@ export async function openReader(filePath: string): Promise<void> {
     vscode.window.showWarningMessage(
       `File "${fileName}" exceeds ${config.maxFileSize} lines, showing first ${config.maxFileSize} lines.`
     );
+  }
+
+  // Notify symbol provider if data is available
+  if (onSymbolsReady && parseResult.symbols.length > 0) {
+    onSymbolsReady(filePath, parseResult.symbols);
   }
 
   if (!currentPanel) {

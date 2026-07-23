@@ -1,12 +1,14 @@
 import * as vscode from "vscode";
 import { FileTreeProvider } from "./treeviews/fileTreeProvider";
-import { openReader } from "./panels/readerPanel";
+import { SymbolTreeProvider } from "./treeviews/symbolTreeProvider";
+import { openReader, setOnSymbolsReady } from "./panels/readerPanel";
 
 export let extContext: vscode.ExtensionContext;
 
 export function activate(context: vscode.ExtensionContext) {
   extContext = context;
 
+  // File tree
   const fileTreeProvider = new FileTreeProvider();
   const fileTree = vscode.window.createTreeView("codeReader.fileTree", {
     treeDataProvider: fileTreeProvider,
@@ -14,13 +16,28 @@ export function activate(context: vscode.ExtensionContext) {
   });
   context.subscriptions.push(fileTree);
 
+  // Symbol tree
+  const symbolTreeProvider = new SymbolTreeProvider();
+  const symbolTree = vscode.window.createTreeView("codeReader.symbols", {
+    treeDataProvider: symbolTreeProvider,
+    showCollapseAll: false,
+  });
+  context.subscriptions.push(symbolTree);
+
+  // Wire symbol data from parser to tree view
+  setOnSymbolsReady((_filePath, symbols) => {
+    symbolTreeProvider.update(symbols);
+  });
+
+  // openReader command
   const openCmd = vscode.commands.registerCommand(
     "codeReader.openReader",
     async (filePath?: string) => {
-      // Fallback to active editor when triggered via keyboard shortcut (no argument)
       const target = filePath || vscode.window.activeTextEditor?.document.uri.fsPath;
       if (!target) {
-        vscode.window.showWarningMessage("No file selected. Open a file in the editor or click a file in the Project Files tree.");
+        vscode.window.showWarningMessage(
+          "No file selected. Open a file in the editor or click a file in the Project Files tree."
+        );
         return;
       }
       try {

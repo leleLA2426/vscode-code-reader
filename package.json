@@ -27,14 +27,18 @@
         }
       ]
     },
-    "views": {
-      "codeReader": [
+   "views": {
+     "codeReader": [
+       {
+         "id": "codeReader.fileTree",
+         "name": "Project Files"
+        },
         {
-          "id": "codeReader.fileTree",
-          "name": "Project Files"
-        }
-      ]
-    },
+          "id": "codeReader.symbols",
+          "name": "Symbols"
+       }
+     ]
+   },
     "commands": [
       {
         "command": "codeReader.openReader",
