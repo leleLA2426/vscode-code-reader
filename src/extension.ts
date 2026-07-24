@@ -8,7 +8,6 @@ export let extContext: vscode.ExtensionContext;
 export function activate(context: vscode.ExtensionContext) {
   extContext = context;
 
-  // File tree
   const fileTreeProvider = new FileTreeProvider();
   const fileTree = vscode.window.createTreeView("codeReader.fileTree", {
     treeDataProvider: fileTreeProvider,
@@ -16,7 +15,6 @@ export function activate(context: vscode.ExtensionContext) {
   });
   context.subscriptions.push(fileTree);
 
-  // Symbol tree
   const symbolTreeProvider = new SymbolTreeProvider();
   const symbolTree = vscode.window.createTreeView("codeReader.symbols", {
     treeDataProvider: symbolTreeProvider,
@@ -24,15 +22,28 @@ export function activate(context: vscode.ExtensionContext) {
   });
   context.subscriptions.push(symbolTree);
 
-  // Wire symbol data from parser to tree view
-  setOnSymbolsReady((_filePath, symbols) => {
-    symbolTreeProvider.update(symbols);
+  setOnSymbolsReady((filePath, symbols) => {
+    symbolTreeProvider.update(filePath, symbols);
   });
+
+  // goToSymbol: jump to a specific line in the reader
+  const gotoCmd = vscode.commands.registerCommand(
+    "codeReader.gotoSymbol",
+    async (filePath: string, line: number) => {
+      const uri = vscode.Uri.file(filePath);
+      const doc = await vscode.workspace.openTextDocument(uri);
+      const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
+      const range = new vscode.Range(line, 0, line, 0);
+      editor.selection = new vscode.Selection(range.start, range.start);
+      editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+    }
+  );
+  context.subscriptions.push(gotoCmd);
 
   // openReader command
   const openCmd = vscode.commands.registerCommand(
     "codeReader.openReader",
-    async (filePath?: string) => {
+    async (filePath?: string, scrollToLine?: number) => {
       const target = filePath || vscode.window.activeTextEditor?.document.uri.fsPath;
       if (!target) {
         vscode.window.showWarningMessage(
@@ -41,7 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
       try {
-        await openReader(target);
+        await openReader(target, scrollToLine);
       } catch (e) {
         vscode.window.showErrorMessage(`Failed to open reader: ${(e as Error).message}`);
       }

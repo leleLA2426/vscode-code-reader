@@ -61,6 +61,10 @@ body.theme-dark   { background: #1e1e1e; color: #d4d4d4; }
 .theme-light .token-function { color: #795e26; }
 .theme-light .token-class    { color: #267f99; }
 
+
+.token-variable { color: #9cdcfe; }
+.theme-sepia .token-variable { color: #556b2f; }
+.theme-light .token-variable { color: #001080; }
 /* ---- Fold ---- */
 .fold-hidden { display: none; }
 
@@ -75,3 +79,12 @@ body.theme-dark   { background: #1e1e1e; color: #d4d4d4; }
 }
 
 .fold-toggle:hover { color: #aaa; }
+/* Symbol jump highlight */
+.jump-highlight {
+  animation: jump-flash 2s ease-out;
+}
+
+@keyframes jump-flash {
+  0%   { background: rgba(255, 200, 50, 0.4); }
+  100% { background: transparent; }
+}

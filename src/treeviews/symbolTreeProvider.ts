@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
 import { SymbolNode } from "../types";
 
-/** Tree item for a single symbol node */
 class SymbolItem extends vscode.TreeItem {
   constructor(
     public readonly symbol: SymbolNode,
+    public readonly filePath: string,
     collapsible: vscode.TreeItemCollapsibleState
   ) {
     super(symbol.name, collapsible);
@@ -13,9 +13,8 @@ class SymbolItem extends vscode.TreeItem {
     this.command = {
       command: "codeReader.openReader",
       title: "Go to Symbol",
-      arguments: [""], // placeholder, overridden below
+      arguments: [filePath, symbol.startLine],
     };
-    // Assign icon based on kind
     switch (symbol.kind) {
       case "function": case "method":
         this.iconPath = new vscode.ThemeIcon("symbol-method"); break;
@@ -36,8 +35,10 @@ export class SymbolTreeProvider implements vscode.TreeDataProvider<SymbolItem> {
   readonly onDidChangeTreeData = this._onDidChange.event;
 
   private symbols: SymbolNode[] = [];
+  private currentFile: string = "";
 
-  update(symbols: SymbolNode[]): void {
+  update(filePath: string, symbols: SymbolNode[]): void {
+    this.currentFile = filePath;
     this.symbols = symbols;
     this._onDidChange.fire(undefined);
   }
@@ -48,20 +49,18 @@ export class SymbolTreeProvider implements vscode.TreeDataProvider<SymbolItem> {
 
   getChildren(element?: SymbolItem): SymbolItem[] {
     if (!element) {
-      // Root level: top-level symbols
       return this.symbols.map((s) => {
         const collapsible = s.children.length > 0
           ? vscode.TreeItemCollapsibleState.Expanded
           : vscode.TreeItemCollapsibleState.None;
-        return new SymbolItem(s, collapsible);
+        return new SymbolItem(s, this.currentFile, collapsible);
       });
     }
-    // Nested: children of a symbol
     return element.symbol.children.map((child) => {
       const collapsible = child.children.length > 0
         ? vscode.TreeItemCollapsibleState.Expanded
         : vscode.TreeItemCollapsibleState.None;
-      return new SymbolItem(child, collapsible);
+      return new SymbolItem(child, element.filePath, collapsible);
     });
   }
 }

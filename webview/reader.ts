@@ -1,4 +1,4 @@
-// Webview script — rendered in reader.html, communicates via postMessage
+// Webview script 闂?rendered in reader.html, communicates via postMessage
 
 interface Token { startByte: number; endByte: number; line: number; type: string; }
 interface FoldRange { startLine: number; endLine: number; }
@@ -7,8 +7,6 @@ interface ParseResult { content: string; tokens: Token[]; symbols: unknown[]; fo
 let currentContent = "";
 let currentTokens: Token[] = [];
 let currentFolds: FoldRange[] = [];
-
-// Track fold state: fold start line → collapsed?
 const foldState = new Map<number, boolean>();
 
 window.addEventListener("message", (event) => {
@@ -18,12 +16,19 @@ window.addEventListener("message", (event) => {
       currentContent = msg.result.content;
       currentTokens = msg.result.tokens;
       currentFolds = msg.result.folds;
-      // Reset fold state for new file
       foldState.clear();
       for (const f of currentFolds) {
-        foldState.set(f.startLine, true); // all folds start collapsed
+        foldState.set(f.startLine, false);
       }
       renderContent();
+      if (msg.scrollToLine !== undefined) {
+        setTimeout(() => {
+          const el = document.querySelector('.code-line[data-line="' + msg.scrollToLine + '"]');
+                      el.scrollIntoView({ behavior: "smooth", block: "center" });
+                      el.classList.add('jump-highlight');
+                      setTimeout(() => el.classList.remove('jump-highlight'), 2000);
+        }, 100);
+      }
       break;
     case "updateTheme":
       if (msg.theme) document.body.className = `theme-${msg.theme}`;
@@ -47,6 +52,14 @@ function renderContent(): void {
 
   const lines = currentContent.split("\n");
 
+  // Precompute byte offset for the start of each line
+  const lineStartBytes: number[] = [];
+  let bytePos = 0;
+  for (let i = 0; i < lines.length; i++) {
+    lineStartBytes.push(bytePos);
+    bytePos += lines[i].length + 1; // +1 for the newline
+  }
+
   // Build per-line token index
   const lineTokens: Map<number, Token[]> = new Map();
   for (const t of currentTokens) {
@@ -55,18 +68,16 @@ function renderContent(): void {
     lineTokens.set(t.line, list);
   }
 
-  // Build collapsed line set from current fold state
+  // Build collapsed line set from fold state
   const collapsedLines: Set<number> = new Set();
   for (const f of currentFolds) {
     if (foldState.get(f.startLine) !== false) {
-      // Fold is collapsed (default) or explicitly collapsed
       for (let i = f.startLine + 1; i <= f.endLine; i++) {
         collapsedLines.add(i);
       }
     }
   }
 
-  // Build set of fold-start lines for quick lookup
   const foldStartLines = new Set<number>();
   for (const f of currentFolds) {
     foldStartLines.add(f.startLine);
@@ -76,18 +87,17 @@ function renderContent(): void {
 
   for (let i = 0; i < lines.length; i++) {
     const isFoldStart = foldStartLines.has(i);
-    const isCollapsed = foldState.get(i) !== false; // default true = collapsed
+    const isCollapsed = foldState.get(i) !== false;
     const isFolded = collapsedLines.has(i);
 
     const lineDiv = document.createElement("div");
     lineDiv.className = `code-line${isFolded ? " fold-hidden" : ""}`;
     lineDiv.setAttribute("data-line", String(i));
 
-    // Line number
+    // Line number + optional fold toggle
     const lineNum = document.createElement("span");
     lineNum.className = "line-number";
     if (isFoldStart) {
-      // Fold toggle button before line number
       const foldBtn = document.createElement("span");
       foldBtn.className = "fold-toggle";
       foldBtn.textContent = isCollapsed ? "\u25B6" : "\u25BC";
@@ -97,33 +107,39 @@ function renderContent(): void {
     lineNum.appendChild(document.createTextNode(String(i + 1)));
     lineDiv.appendChild(lineNum);
 
-    // Code content (with syntax highlighting when tokens exist)
+    // Code content with syntax highlighting
     const contentSpan = document.createElement("span");
     contentSpan.className = "line-content";
 
     const tokens = lineTokens.get(i);
+    const lineStart = lineStartBytes[i];
+    const lineStr = lines[i];
+
     if (tokens && tokens.length > 0) {
-      let lastEnd = 0;
+      let lastEnd = 0; // relative position within this line
       for (const tok of tokens) {
-        if (tok.startByte > lastEnd) {
+        // Convert absolute byte/char index to line-relative
+        const relStart = tok.startByte - lineStart;
+        const relEnd = tok.endByte - lineStart;
+
+        if (relStart > lastEnd) {
           contentSpan.appendChild(
-            document.createTextNode(currentContent.slice(lastEnd, tok.startByte))
+            document.createTextNode(lineStr.slice(lastEnd, relStart))
           );
         }
         const tokenSpan = document.createElement("span");
         tokenSpan.className = `token-${tok.type}`;
-        tokenSpan.textContent = currentContent.slice(tok.startByte, tok.endByte);
+        tokenSpan.textContent = lineStr.slice(relStart, relEnd);
         contentSpan.appendChild(tokenSpan);
-        lastEnd = tok.endByte;
+        lastEnd = relEnd;
       }
-      // Remaining text after last token
-      if (lastEnd < lines[i].length) {
+      if (lastEnd < lineStr.length) {
         contentSpan.appendChild(
-          document.createTextNode(lines[i].slice(lastEnd))
+          document.createTextNode(lineStr.slice(lastEnd))
         );
       }
     } else {
-      contentSpan.textContent = lines[i];
+      contentSpan.textContent = lineStr;
     }
 
     lineDiv.appendChild(contentSpan);

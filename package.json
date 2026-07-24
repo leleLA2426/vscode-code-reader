@@ -27,18 +27,18 @@
         }
       ]
     },
-   "views": {
-     "codeReader": [
-       {
-         "id": "codeReader.fileTree",
-         "name": "Project Files"
+    "views": {
+      "codeReader": [
+        {
+          "id": "codeReader.fileTree",
+          "name": "Project Files"
         },
         {
           "id": "codeReader.symbols",
           "name": "Symbols"
-       }
-     ]
-   },
+        }
+      ]
+    },
     "commands": [
       {
         "command": "codeReader.openReader",
@@ -50,12 +50,12 @@
         "icon": "$(refresh)"
       }
     ],
-   "keybindings": [
-     {
-       "command": "codeReader.openReader",
+    "keybindings": [
+      {
+        "command": "codeReader.openReader",
         "key": "ctrl+alt+r"
-     }
-   ],
+      }
+    ],
     "menus": {
       "view/title": [
         {
@@ -115,6 +115,10 @@
   "dependencies": {
     "iconv-lite": "^0.7.3",
     "node-addon-api": "^7.0.0",
-    "node-gyp": "^13.0.1"
+    "node-gyp": "^13.0.1",
+    "tree-sitter": "^0.22.4",
+    "tree-sitter-c": "^0.24.1",
+    "tree-sitter-python": "^0.25.0",
+    "tree-sitter-typescript": "^0.23.2"
   }
 }

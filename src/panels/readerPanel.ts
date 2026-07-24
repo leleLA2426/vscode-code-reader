@@ -7,15 +7,13 @@ import { ParseResult, SymbolNode } from "../types";
 import { extContext } from "../extension";
 
 let currentPanel: vscode.WebviewPanel | undefined;
-
-/** Callback: called when a file is parsed with symbol data */
 let onSymbolsReady: ((filePath: string, symbols: SymbolNode[]) => void) | null = null;
 
 export function setOnSymbolsReady(cb: (filePath: string, symbols: SymbolNode[]) => void) {
   onSymbolsReady = cb;
 }
 
-export async function openReader(filePath: string): Promise<void> {
+export async function openReader(filePath: string, scrollToLine?: number): Promise<void> {
   const config = getConfig();
   const { content, truncated } = await readFileContent(filePath, config.maxFileSize);
   const language = getLanguageForFile(filePath);
@@ -35,8 +33,7 @@ export async function openReader(filePath: string): Promise<void> {
     );
   }
 
-  // Notify symbol provider if data is available
-  if (onSymbolsReady && parseResult.symbols.length > 0) {
+  if (onSymbolsReady) {
     onSymbolsReady(filePath, parseResult.symbols);
   }
 
@@ -94,5 +91,12 @@ export async function openReader(filePath: string): Promise<void> {
   currentPanel.title = `Reader: ${fileName}`;
   currentPanel.reveal(vscode.ViewColumn.Beside);
 
-  currentPanel.webview.postMessage({ type: "loadFile", filePath, result: parseResult });
+  currentPanel.webview.postMessage({ type: "loadFile", filePath, result: parseResult, scrollToLine });
+
+  // Scroll to specific line after content loads
+  if (scrollToLine !== undefined && scrollToLine >= 0) {
+    setTimeout(() => {
+      currentPanel?.webview.postMessage({ type: "scrollToLine", line: scrollToLine });
+    }, 200);
+  }
 }

@@ -1,44 +1,38 @@
 [![VSCode](https://img.shields.io/badge/VSCode-%5E1.85.0-blue)](https://code.visualstudio.com/)
 [![C++](https://img.shields.io/badge/C%2B%2B-17-orange)](https://isocpp.org/)
 
-# Code Reader - VSCode 代码阅读器插件
+# Code Reader - VSCode 浠ｇ爜闃呰鍣ㄦ彃浠?
+娌夋蹈寮忎唬鐮侀槄璇?VSCode 鎵╁睍锛屾敮鎸佽娉曢珮浜紙鍗冲皢锛夈€佺鍙峰鑸紙鍗冲皢锛夈€佽皟鐢ㄥ叧绯诲浘锛堝嵆灏嗭級锛屽苟闆嗘垚鏈湴 Ollama AI 澶фā鍨嬬敤浜庝唬鐮佽В閲婏紙鍗冲皢锛夈€?
+## 褰撳墠鐗堟湰锛歷0.2.0
 
-沉浸式代码阅读 VSCode 扩展，支持语法高亮（即将）、符号导航（即将）、调用关系图（即将），并集成本地 Ollama AI 大模型用于代码解释（即将）。
-
-## 当前版本：v0.2.0
-
-### 已实现
-
-- **沉浸式阅读面板** — 代码内容渲染 + 行号显示
-- **三种阅读主题** — 亮色 / 暗色 / 护眼褐，VSCode 设置实时同步
-- **可调字号** — 设置实时同步
-- **文件树浏览** — 侧边栏 Project Files，目录优先排序，自动折叠依赖目录
-- **快捷键** — `Ctrl+Alt+R` 打开当前编辑器文件到阅读面板
-- **大文件截断** — 超限自动截断 + 提示（可配置阈值）
-- **中文兼容** — UTF-8 优先，自动回退 GBK 编码
-- **降级保护** — C++ 原生模块不可用时自动降级纯文本，不崩溃
-
-### 开发构建
-
+### 宸插疄鐜?
+- **娌夋蹈寮忛槄璇婚潰鏉?* 鈥?浠ｇ爜鍐呭娓叉煋 + 琛屽彿鏄剧ず
+- **涓夌闃呰涓婚** 鈥?浜壊 / 鏆楄壊 / 鎶ょ溂瑜愶紝VSCode 璁剧疆瀹炴椂鍚屾
+- **鍙皟瀛楀彿** 鈥?璁剧疆瀹炴椂鍚屾
+- **鏂囦欢鏍戞祻瑙?* 鈥?渚ц竟鏍?Project Files锛岀洰褰曚紭鍏堟帓搴忥紝鑷姩鎶樺彔渚濊禆鐩綍
+- **蹇嵎閿?* 鈥?`Ctrl+Alt+R` 鎵撳紑褰撳墠缂栬緫鍣ㄦ枃浠跺埌闃呰闈㈡澘
+- **澶ф枃浠舵埅鏂?* 鈥?瓒呴檺鑷姩鎴柇 + 鎻愮ず锛堝彲閰嶇疆闃堝€硷級
+- **涓枃鍏煎** 鈥?UTF-8 浼樺厛锛岃嚜鍔ㄥ洖閫€ GBK 缂栫爜
+- **闄嶇骇淇濇姢** 鈥?C++ 鍘熺敓妯″潡涓嶅彲鐢ㄦ椂鑷姩闄嶇骇绾枃鏈紝涓嶅穿婧?
+### 寮€鍙戞瀯寤?
 ```bash
 npm install
-npm run build:native   # C++ addon (需 VS2022 + Python 3.10)
+npm run build:native   # C++ addon (闇€ VS2022 + Python 3.10)
 npm run build:ts       # TypeScript
 ```
 
-### 调试
+### 璋冭瘯
 
-按 F5 在 VSCode 中启动扩展开发主机。
+鎸?F5 鍦?VSCode 涓惎鍔ㄦ墿灞曞紑鍙戜富鏈恒€?
+### 鏂囨。
 
-### 文档
-
-- [产品需求文档](PRD.md)
-- [架构设计文档](ARCHITECTURE.md)
-- [开发指南](DEVELOPMENT.md)
-- [变更日志](CHANGELOG.md)
-- [测试报告](test-report.md)
+- [浜у搧闇€姹傛枃妗(PRD.md)
+- [鏋舵瀯璁捐鏂囨。](ARCHITECTURE.md)
+- [寮€鍙戞寚鍗梋(DEVELOPMENT.md)
+- [鍙樻洿鏃ュ織](CHANGELOG.md)
+- [娴嬭瘯鎶ュ憡](test-report.md)
 - [AGENTS.md](AGENTS.md)
 
-## 许可
+## 璁稿彲
 
 MIT
