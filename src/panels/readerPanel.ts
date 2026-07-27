@@ -6,7 +6,8 @@ import { getConfig } from "../utils/config";
 import { ParseResult, SymbolNode } from "../types";
 import { extContext } from "../extension";
 
-let currentPanel: vscode.WebviewPanel | undefined;
+const panels: Map<string, vscode.WebviewPanel> = new Map();
+const fileSymbols: Map<string, SymbolNode[]> = new Map();
 let onSymbolsReady: ((filePath: string, symbols: SymbolNode[]) => void) | null = null;
 
 export function setOnSymbolsReady(cb: (filePath: string, symbols: SymbolNode[]) => void) {
@@ -33,19 +34,21 @@ export async function openReader(filePath: string, scrollToLine?: number): Promi
     );
   }
 
+  fileSymbols.set(filePath, parseResult.symbols);
   if (onSymbolsReady) {
     onSymbolsReady(filePath, parseResult.symbols);
   }
 
-  if (!currentPanel) {
+  let panel = panels.get(filePath);
+  if (!panel) {
     const extPath = extContext.extensionPath;
     const webviewDir = vscode.Uri.file(path.join(extPath, "webview"));
     const distDir = vscode.Uri.file(path.join(extPath, "dist"));
     const mediaDir = vscode.Uri.file(path.join(extPath, "media"));
 
-    currentPanel = vscode.window.createWebviewPanel(
+    panel = vscode.window.createWebviewPanel(
       "codeReader.reader",
-      "Code Reader",
+      `Reader: ${fileName}`,
       vscode.ViewColumn.Beside,
       {
         enableScripts: true,
@@ -54,15 +57,22 @@ export async function openReader(filePath: string, scrollToLine?: number): Promi
       }
     );
 
-    currentPanel.onDidDispose(() => { currentPanel = undefined; });
+    panel.onDidDispose(() => { panels.delete(filePath); fileSymbols.delete(filePath); });
+
+    panel.onDidChangeViewState((e) => {
+      if (e.webviewPanel.active && onSymbolsReady) {
+        const syms = fileSymbols.get(filePath);
+        if (syms) onSymbolsReady(filePath, syms);
+      }
+    });
 
     const html = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(webviewDir, "reader.html"));
     let htmlContent = Buffer.from(html).toString("utf-8");
 
-    const readerScriptUri = currentPanel.webview.asWebviewUri(
+    const readerScriptUri = panel.webview.asWebviewUri(
       vscode.Uri.joinPath(distDir, "webview", "reader.js")
     );
-    const styleUri = currentPanel.webview.asWebviewUri(
+    const styleUri = panel.webview.asWebviewUri(
       vscode.Uri.joinPath(mediaDir, "styles", "reader.css")
     );
 
@@ -70,33 +80,25 @@ export async function openReader(filePath: string, scrollToLine?: number): Promi
       .replace("styles/reader.css", styleUri.toString())
       .replace("reader.js", readerScriptUri.toString());
 
-    currentPanel.webview.html = htmlContent;
+    panel.webview.html = htmlContent;
+    panels.set(filePath, panel);
 
-    currentPanel.webview.postMessage({ type: "updateTheme", theme: config.readerTheme });
-    currentPanel.webview.postMessage({ type: "updateFontSize", size: config.readerFontSize });
+    panel.webview.postMessage({ type: "updateTheme", theme: config.readerTheme });
+    panel.webview.postMessage({ type: "updateFontSize", size: config.readerFontSize });
 
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (!currentPanel) return;
+      const p = panels.get(filePath);
+      if (!p) return;
       if (e.affectsConfiguration("codeReader.readerTheme")) {
-        const cfg = getConfig();
-        currentPanel.webview.postMessage({ type: "updateTheme", theme: cfg.readerTheme });
+        p.webview.postMessage({ type: "updateTheme", theme: getConfig().readerTheme });
       }
       if (e.affectsConfiguration("codeReader.readerFontSize")) {
-        const cfg = getConfig();
-        currentPanel.webview.postMessage({ type: "updateFontSize", size: cfg.readerFontSize });
+        p.webview.postMessage({ type: "updateFontSize", size: getConfig().readerFontSize });
       }
     });
   }
 
-  currentPanel.title = `Reader: ${fileName}`;
-  currentPanel.reveal(vscode.ViewColumn.Beside);
-
-  currentPanel.webview.postMessage({ type: "loadFile", filePath, result: parseResult, scrollToLine });
-
-  // Scroll to specific line after content loads
-  if (scrollToLine !== undefined && scrollToLine >= 0) {
-    setTimeout(() => {
-      currentPanel?.webview.postMessage({ type: "scrollToLine", line: scrollToLine });
-    }, 200);
-  }
+  panel.title = `Reader: ${fileName}`;
+  panel.reveal(panel.viewColumn);
+  panel.webview.postMessage({ type: "loadFile", filePath, result: parseResult, scrollToLine });
 }
