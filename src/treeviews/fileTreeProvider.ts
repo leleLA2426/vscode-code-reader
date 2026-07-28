@@ -3,7 +3,6 @@ import * as path from "path";
 import { shouldCollapseDir } from "../utils/fileUtils";
 import { getConfig } from "../utils/config";
 
-/** TreeItem with attached full path for directory traversal */
 interface TreeItemWithPath extends vscode.TreeItem {
   fullPath: string;
 }
@@ -12,12 +11,12 @@ export class FileTreeProvider implements vscode.TreeDataProvider<TreeItemWithPat
   private _onDidChange = new vscode.EventEmitter<TreeItemWithPath | undefined>();
   readonly onDidChangeTreeData = this._onDidChange.event;
 
-  private rootPath: string | undefined;
+  private rootPaths: string[] = [];
 
   constructor() {
     const folders = vscode.workspace.workspaceFolders;
     if (folders && folders.length > 0) {
-      this.rootPath = folders[0].uri.fsPath;
+      this.rootPaths = folders.map((f) => f.uri.fsPath);
     }
   }
 
@@ -30,18 +29,27 @@ export class FileTreeProvider implements vscode.TreeDataProvider<TreeItemWithPat
   }
 
   async getChildren(element?: TreeItemWithPath): Promise<TreeItemWithPath[]> {
-    if (!this.rootPath) {
+    if (this.rootPaths.length === 0) {
       return [Object.assign(new vscode.TreeItem("No folder opened"), { fullPath: "" }) as TreeItemWithPath];
     }
 
-    const dirPath = element ? element.fullPath : this.rootPath;
+    if (!element) {
+      return this.rootPaths.map((rp) => {
+        const name = rp.split(/[\\/]/).pop() || rp;
+        const item = new vscode.TreeItem(name, vscode.TreeItemCollapsibleState.Expanded) as TreeItemWithPath;
+        item.fullPath = rp;
+        item.iconPath = new vscode.ThemeIcon("folder");
+        return item;
+      });
+    }
+
+    const dirPath = element.fullPath;
     const config = getConfig();
 
     try {
       const entries = await vscode.workspace.fs.readDirectory(vscode.Uri.file(dirPath));
       const items: TreeItemWithPath[] = [];
 
-      // Directories first, then files, sorted alphabetically
       entries.sort((a, b) => {
         const aIsDir = a[1] === vscode.FileType.Directory ? 0 : 1;
         const bIsDir = b[1] === vscode.FileType.Directory ? 0 : 1;
@@ -50,7 +58,6 @@ export class FileTreeProvider implements vscode.TreeDataProvider<TreeItemWithPat
       });
 
       for (const [name, type] of entries) {
-        // Skip .git folder only; show other dot-files/dirs
         if (name === ".git") continue;
 
         const fullPath = path.join(dirPath, name);
